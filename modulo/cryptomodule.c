@@ -22,25 +22,25 @@ static struct file_operations fops = {
 static int Major;
 static struct class *cls;
 static short size_of_message;
-static char msg[BUF_LEN];
+static char msg[BUF_LEN * 2];
 static char operacao;
 //static unsigned char dados[TAMMAX];
-unsigned char dadosHex[TAMMAX / 2];
+
 static char string_hash[SHA256_LENGTH * 2 + 1];
 // static char resultado[BUF_LEN];
 static char *readMSG;
 
 
-static char resultado[BUF_LEN];
+static char resultado[BUF_LEN*2];
 //static char resultado[CIPHER_BLOCK_SIZE * 2 + 1];
 static char key[CIPHER_BLOCK_SIZE];
 static char *keyHex;
 static int size_of_hex_msg;
 
-static char textInCipher[BUF_LEN];
+static char textInCipher[BUF_LEN *2];
 static char *auxInCipher;
 
-static char textInDecipher[BUF_LEN];
+static char textInDecipher[BUF_LEN*2];
 static char *auxInDecipher;
 
 /*Cria um parametro para o modulo, com a permicao 0
@@ -175,7 +175,7 @@ static int test_skcipher_encrypt(char *plaintext, char *password,
 	int ret = (int)(-EFAULT);
 	int j;
 	unsigned char key[SYMMETRIC_KEY_LENGTH];
-	pr_info("1 Plaintext: %s\n", plaintext);
+	
 	pr_info("Encrypted");
 
 	if (!sk->tfm)
@@ -197,21 +197,17 @@ static int test_skcipher_encrypt(char *plaintext, char *password,
 			goto out;
 		}
 	}
-	pr_info("2 Plaintext: %s\n", plaintext);
+
 	skcipher_request_set_callback(sk->req, CRYPTO_TFM_REQ_MAY_BACKLOG,
 								  test_skcipher_callback,
 								  &sk->result);
 	/* clear the key */
-	pr_info("3 Plaintext: %s\n", plaintext);
+
 	memset((void *)key, '\0', SYMMETRIC_KEY_LENGTH);
-	pr_info("4 Plaintext: %s\n", plaintext);
-	/* Use the world's favourite password */
-	pr_info("5 Plaintext: %s\n", plaintext);
 
 	//sprintf((char *)key, "%s", password);
 	memcpy((char *)key,password, SYMMETRIC_KEY_LENGTH);
 
-	pr_info("6 Plaintext: %s\n", plaintext);
 	/* AES 128 with given symmetric key */
 	if (crypto_skcipher_setkey(sk->tfm, key, SYMMETRIC_KEY_LENGTH))
 	{
@@ -219,7 +215,7 @@ static int test_skcipher_encrypt(char *plaintext, char *password,
 		ret = -EAGAIN;
 		goto out;
 	}
-	pr_info("7 Plaintext: %s\n", plaintext);
+	
 	if (!sk->ivdata)
 	{
 		/* see https://en.wikipedia.org/wiki/Initialization_vector */
@@ -231,7 +227,7 @@ static int test_skcipher_encrypt(char *plaintext, char *password,
 		}
 		get_random_bytes(sk->ivdata, CIPHER_BLOCK_SIZE);
 	}
-	pr_info("8 Plaintext: %s\n", plaintext);
+
 	if (!sk->scratchpad)
 	{
 		/* The text to be encrypted */
@@ -248,7 +244,7 @@ static int test_skcipher_encrypt(char *plaintext, char *password,
 	for(j=0;j<nBlocos;j++){
 		memcpy(sk->scratchpad,plaintext+CIPHER_BLOCK_SIZE*j,CIPHER_BLOCK_SIZE);
 		//sprintf((char *)sk->scratchpad, "%s", plaintext);
-
+		//pr_info("Bucetao: %s", sk->scratchpad);
 		
 		sg_init_one(&sk->sg, sk->scratchpad, CIPHER_BLOCK_SIZE);
 		skcipher_request_set_crypt(sk->req, &sk->sg, &sk->sg,
@@ -267,8 +263,9 @@ static int test_skcipher_encrypt(char *plaintext, char *password,
 
 		
     	auxInCipher = sg_virt(&(sk->sg));
+		//pr_info("muleque piranha:%s", auxInCipher);
 		memcpy(textInCipher+CIPHER_BLOCK_SIZE*j,auxInCipher,CIPHER_BLOCK_SIZE);
-
+		//pr_info("muleque assanhado:%s", textInCipher);
 		
 	}
 
@@ -553,7 +550,7 @@ static ssize_t device_read(struct file *filp, char *buffer, size_t length, loff_
 static ssize_t device_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
 	int i;
-	char msgPassada[BUF_LEN];
+	char msgPassada[BUF_LEN * 2];
 	sprintf(msg, "%s", buff);
 	size_of_message = strlen(msg);
 	operacao = msg[0];
@@ -574,6 +571,7 @@ static ssize_t device_write(struct file *filp, const char *buff, size_t len, lof
 	if (operacao == 'c' || operacao == 'C')
 	{
 		/*Cifrar dados*/
+
 		cryptoapi_init(msgPassada);
 	}
 	else if (operacao == 'd' || operacao == 'D')
