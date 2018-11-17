@@ -244,7 +244,7 @@ static int test_skcipher_encrypt(char *plaintext, char *password,
 	for(j=0;j<nBlocos;j++){
 		memcpy(sk->scratchpad,plaintext+CIPHER_BLOCK_SIZE*j,CIPHER_BLOCK_SIZE);
 		//sprintf((char *)sk->scratchpad, "%s", plaintext);
-		//pr_info("Bucetao: %s", sk->scratchpad);
+		
 		
 		sg_init_one(&sk->sg, sk->scratchpad, CIPHER_BLOCK_SIZE);
 		skcipher_request_set_crypt(sk->req, &sk->sg, &sk->sg,
@@ -265,7 +265,6 @@ static int test_skcipher_encrypt(char *plaintext, char *password,
     	auxInCipher = sg_virt(&(sk->sg));
 		//pr_info("muleque piranha:%s", auxInCipher);
 		memcpy(textInCipher+CIPHER_BLOCK_SIZE*j,auxInCipher,CIPHER_BLOCK_SIZE);
-		//pr_info("muleque assanhado:%s", textInCipher);
 		
 	}
 
@@ -412,7 +411,7 @@ int cryptoapi_init(char *msgUser)
 	readMSG = resultado;
 
 	return 0;
-}//2D44447A8CFF4D6FC96D993DB3075BB0 CFD7DFFFCFD7DFFFCFD7DFFFCFD7DFFF
+}
 int decryptoapi_init(char *msgUser)
 {
 	int i;
