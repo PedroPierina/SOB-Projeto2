@@ -8,6 +8,7 @@
  */
 
 #include "minix.h"
+#include <linux/crypto.h>
 //static size_t teste(struct kiocb *iocb, struct iov_iter *from);
 /*
  * We have mostly NULLs here: the current defaults are OK for
@@ -15,34 +16,70 @@
  */
 const struct file_operations minix_file_operations = {
 	.llseek		= generic_file_llseek,
-	.read_iter	= generic_file_read_iter,
-	.write_iter	= &teste, //void *function = &teste; (*function)();
+	.read_iter	= &read_modified,
+	.write_iter	= &write_modified, 
 	.mmap		= generic_file_mmap,
 	.fsync		= generic_file_fsync,
 	.splice_read 	= generic_file_splice_read,
 };
 
-static ssize_t teste(struct kiocb *iocb, struct iov_iter *from){
-	ssize_t ret;
-	ssize_t bytes = from->count;
-	char addr[100];
-	int i;
+static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from){
 
-	pr_info("file: count %i", (int)bytes);
-	//ret = copy_to_iter((void *)addr, bytes, from);
-	//pr_info("file: valor addr %s",addr);
-	//for (i = 0; i < 100; i++)
-	//{
+	char *addrDados = (char *)(from->iov->iov_base);
 
-	// 	pr_info("file: addr %c", addr[i]);
-		
-	// }
-	pr_info("file: ret %i", (int) ret);
-	pr_info("file: teste %s", (char *)(from->iov->iov_base));
+	pr_info("file: teste %s", addrDados);
 	pr_info("file: key %s", getKey());
-	//generic_file_write_iter(iocb,from);		
+
+	encryptDados(&addrDados);
 	
 	return generic_file_write_iter(iocb,from);
+}
+
+static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from){
+
+	char *addrDados = (char *)(from->iov->iov_base);
+	
+	return generic_file_read_iter(iocb,from);
+}
+
+static void encryptDados(char **addrDados){
+	char *addrKey, block[CIPHER_BLOCK_SIZE];
+	int numBlocos, byteslastblock, i, j;
+	struct crypto_cipher *tfm;
+
+	// Get Cipher Key
+	addrKey = getKey();
+
+	// Number or blocks and number of lastblock and number of bytes in last block
+	numBlocos = strlen(addrDados)/CIPHER_BLOCK_SIZE;
+	byteslastblock = strlen(addrDados)%CIPHER_BLOCK_SIZE;
+	if(byteslastblock) numBlocos++;
+
+	// Alloc crypto
+	tfm = crypto_alloc_cipher("ecb-aes-aesni", 0, CIPHER_BLOCK_SIZE);
+	crypto_cipher_setkey(tfm, addrKey, CIPHER_BLOCK_SIZE);
+
+	// Encrypting
+	for(i = 0; i < numBlocos; i++){
+		// if(byteslastblock && i == numBlocos - 1){
+		// 	for(j = byteslastblock; j < CIPHER_BLOCK_SIZE; j++){
+		// 		addrDados[i*CIPHER_BLOCK_SIZE + j] = 0;
+		// 	}
+		// }
+		crypto_cipher_encrypt_one(tfm, block, *addrDados);
+		pr_info("Block %i: %s", block);
+		memcpy(*addrDados, block, CIPHER_BLOCK_SIZE);
+		*addrDados += CIPHER_BLOCK_SIZE;
+	}
+	
+	// Free crypto
+	crypto_free_cipher(tfm);
+
+}
+static void decryptDados(char *addrDados){
+	char *addrKey;
+	addrKey = getKey();
+
 }
 
 static int minix_setattr(struct dentry *dentry, struct iattr *attr)

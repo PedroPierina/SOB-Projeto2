@@ -12,6 +12,8 @@
 #define MINIX_V2		0x0002		/* minix V2 fs */
 #define MINIX_V3		0x0003		/* minix V3 fs */
 
+#define CIPHER_BLOCK_SIZE 16
+
 //extern char *keyHex;
 
 
@@ -47,7 +49,10 @@ struct minix_sb_info {
 	unsigned short s_version;
 };
 
-static ssize_t teste(struct kiocb *iocb, struct iov_iter *from);
+static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
+static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from);
+static void encryptDados(char *addrDados);
+static void decryptDados(char *addrDados);
 
 extern char *getKey(void);
 

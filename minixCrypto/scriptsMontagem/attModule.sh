@@ -27,9 +27,10 @@ else
     
     cd scriptsMontagem
     bash createFS.sh
-    cd ..
+    cd ../..
 
     cp test.txt ./device
+    cd minixCrypto
 fi
 
 rm auxattmodule.txt
