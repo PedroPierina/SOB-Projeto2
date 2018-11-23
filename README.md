@@ -98,4 +98,19 @@ experimento.**
 punida com a nota -Nmax para todos os envolvidos. Na dúvida do que é ou não plágio,
 consulte o docente.**
 
+**Scripts Importantes**
+cleanloops.sh
+Limpa /dev/loops utilizados de x a y
+```
+$ bash cleanloops.sh x y
+```
+
+**Montagem do Modulo Crypto**
+Montara o programa de Kernel alterado
+instalará o modulo ao kernel
+e montará /device em minix a partir do file.img
+Em /minixCrypto/scriptsMontagem:
+```
+$ bash attModules.sh
+```
 
