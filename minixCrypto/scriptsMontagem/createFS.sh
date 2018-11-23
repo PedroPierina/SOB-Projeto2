@@ -1,7 +1,7 @@
 #!/bin/bash
 
 device=`losetup -f`
-cd ..
+cd ../..
 echo "Linking file.img to device $device."
 
 losetup $device file.img
