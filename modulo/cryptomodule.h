@@ -30,7 +30,7 @@
 /*-------------------------------Defines---------------------------------------*/
 #define DEVICE_NAME "cryptomodule"
 #define DISK_SIZE 4096
-#define BUF_LEN 128
+#define BUF_LEN 130
 #define SUCCESS 0
 #define TAMMAX 100
 
