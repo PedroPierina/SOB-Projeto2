@@ -9,11 +9,15 @@
 
 #include "minix.h"
 #include <linux/crypto.h>
+#include <linux/delay.h>
 //static size_t teste(struct kiocb *iocb, struct iov_iter *from);
 /*
  * We have mostly NULLs here: the current defaults are OK for
  * the minix filesystem.
  */
+
+struct skcipher_def sk;
+
 const struct file_operations minix_file_operations = {
 	.llseek		= generic_file_llseek,
 	.read_iter	= &read_modified,
@@ -23,65 +27,246 @@ const struct file_operations minix_file_operations = {
 	.splice_read 	= generic_file_splice_read,
 };
 
-static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from){
+static char textInCipher[BUF_LEN *2];
+static char *auxInCipher;
+static int size_msg;
+
+ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from){
 
 	char *addrDados = (char *)(from->iov->iov_base);
-
-	pr_info("file: teste %s", addrDados);
-	pr_info("file: key %s", getKey());
-
-	encryptDados(&addrDados);
+	char **dadosFinais = (char **)&(from->iov->iov_base);
+	pr_info("file: write %s", addrDados);
+	cryptoDados(addrDados,1);
 	
+	memcpy(*dadosFinais,textInCipher, size_msg);
+	//size_msg = ((size_msg/CIPHER_BLOCK_SIZE)+1) * CIPHER_BLOCK_SIZE;
+	pr_info("write_modified: Resultado Cifrado resultCrypto %s", textInCipher);
+	pr_info("write_modified: Resultado Cifrado addrDados %s", addrDados);
+	pr_info("write_modified: Resultado Cifrado from->iov->iov_base %s", (char *)(from->iov->iov_base));
+
 	return generic_file_write_iter(iocb,from);
 }
 
-static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from){
+ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from){
 
 	char *addrDados = (char *)(from->iov->iov_base);
-	
-	return generic_file_read_iter(iocb,from);
+	char **dadosFinais = (char **)&(from->iov->iov_base);
+	ssize_t ret;
+	pr_info("1-file: read %s", addrDados);
+
+	ret = generic_file_read_iter(iocb,from);
+	cryptoDados(addrDados,0);
+
+	memcpy(*dadosFinais,textInCipher,size_msg);
+	pr_info("9-read_modified: Resultado Decifrado resultCrypto %s", textInCipher);
+	pr_info("10-read_modified: Resultado Decifrado addrDados %s", addrDados);
+	pr_info("11-read_modified: Resultado Decifrado from->iov->iov_base %s", (char *)(from->iov->iov_base));
+	//generic_file_write_iter(iocb,from);
+	udelay(10000);
+	return ret;
 }
 
-static void encryptDados(char **addrDados){
-	char *addrKey, block[CIPHER_BLOCK_SIZE];
-	int numBlocos, byteslastblock, i, j;
-	struct crypto_cipher *tfm;
+void cryptoDados(char *addrDados, int opcao){
 
+	char *addrKey;
+	int   nBlocos;
+	
+	sk.tfm = NULL;
+	sk.req = NULL;
+	sk.scratchpad = NULL;
+	sk.ciphertext = NULL;
+	sk.ivdata = NULL;
+	
+	
+		
+	
+	/*------------------------Key-----------------------------*/
 	// Get Cipher Key
+
 	addrKey = getKey();
+	
+	pr_info("2-cryptoDados:1 key %s", getKey());
 
-	// Number or blocks and number of lastblock and number of bytes in last block
-	numBlocos = strlen(addrDados)/CIPHER_BLOCK_SIZE;
-	byteslastblock = strlen(addrDados)%CIPHER_BLOCK_SIZE;
-	if(byteslastblock) numBlocos++;
+	/*--------------------------------------------------------*/
 
-	// Alloc crypto
-	tfm = crypto_alloc_cipher("ecb-aes-aesni", 0, CIPHER_BLOCK_SIZE);
-	crypto_cipher_setkey(tfm, addrKey, CIPHER_BLOCK_SIZE);
+	/*------------------------Trata-Dados-----------------------------*/
+	if(opcao) size_msg = strlen(addrDados);
 
-	// Encrypting
-	for(i = 0; i < numBlocos; i++){
-		// if(byteslastblock && i == numBlocos - 1){
-		// 	for(j = byteslastblock; j < CIPHER_BLOCK_SIZE; j++){
-		// 		addrDados[i*CIPHER_BLOCK_SIZE + j] = 0;
-		// 	}
-		// }
-		crypto_cipher_encrypt_one(tfm, block, *addrDados);
-		pr_info("Block %i: %s", block);
-		memcpy(*addrDados, block, CIPHER_BLOCK_SIZE);
-		*addrDados += CIPHER_BLOCK_SIZE;
+	pr_info("3-cryptoDados: Tamanho msg %d", size_msg);
+
+	nBlocos = size_msg/CIPHER_BLOCK_SIZE;
+	if(size_msg%CIPHER_BLOCK_SIZE){
+		nBlocos++;
+		memset(addrDados + (nBlocos - 1) * CIPHER_BLOCK_SIZE + size_msg%CIPHER_BLOCK_SIZE, 0, CIPHER_BLOCK_SIZE - size_msg%CIPHER_BLOCK_SIZE);
+	} 
+	pr_info("4-cryptoDados: nBlocos %d", nBlocos);
+	pr_info("5-cryptoDados: opcao %i",opcao);
+
+	test_skcipher_encrypt_decrypt(addrDados, addrKey, &sk, nBlocos,opcao);
+	/*----------------------------------------------------------------*/
+	/*------------------------Trata-Dados-Cifrados--------------------*/
+
+	pr_info("8-cryptoDados: Resultado Crypto textInCipher %s", textInCipher);
+	test_skcipher_finish(&sk);
+	/*----------------------------------------------------------------*/
+	return;
+}
+
+
+int test_skcipher_encrypt_decrypt(char *plaintext, char *password,
+								 struct skcipher_def *sk,
+								 int nBlocos,
+								 int opcao)
+{
+	int ret = (int)(-EFAULT);
+	int j;
+	unsigned char key[SYMMETRIC_KEY_LENGTH + 1];
+	
+	pr_info("test_skcipher_encrypt_decrypt: opcao %i",opcao);
+
+	if (!sk->tfm)
+	{
+		sk->tfm = crypto_alloc_skcipher("ecb(aes)", 0, 0);
+		if (IS_ERR(sk->tfm))
+		{
+			pr_info("could not allocate skcipher handle\n");
+			return PTR_ERR(sk->tfm);
+		}
+	}
+	if (!sk->req)
+	{
+		sk->req = skcipher_request_alloc(sk->tfm, GFP_KERNEL);
+		if (!sk->req)
+		{
+			pr_info("could not allocate skcipher request\n");
+			ret = -ENOMEM;
+			goto out;
+		}
+	}
+
+	skcipher_request_set_callback(sk->req, CRYPTO_TFM_REQ_MAY_BACKLOG,
+								  test_skcipher_callback,
+								  &sk->result);
+	/* clear the key */
+
+	memset((void *)key, '\0', SYMMETRIC_KEY_LENGTH);
+
+	//sprintf((char *)key, "%s", password);
+	memcpy((char *)key,password, SYMMETRIC_KEY_LENGTH);
+
+	/* AES 128 with given symmetric key */
+	if (crypto_skcipher_setkey(sk->tfm, key, SYMMETRIC_KEY_LENGTH))
+	{
+		pr_info("key could not be set\n");
+		ret = -EAGAIN;
+		goto out;
 	}
 	
-	// Free crypto
-	crypto_free_cipher(tfm);
+	if (!sk->ivdata)
+	{
+		/* see https://en.wikipedia.org/wiki/Initialization_vector */
+		sk->ivdata = vmalloc(CIPHER_BLOCK_SIZE);
+		if (!sk->ivdata)
+		{
+			pr_info("could not allocate ivdata\n");
+			goto out;
+		}
+		get_random_bytes(sk->ivdata, CIPHER_BLOCK_SIZE);
+	}
 
+	if (!sk->scratchpad)
+	{
+		/* The text to be encrypted */
+		sk->scratchpad = vmalloc(CIPHER_BLOCK_SIZE);
+		if (!sk->scratchpad)
+		{
+			pr_info("could not allocate scratchpad\n");
+			goto out;
+		}
+	}
+	pr_info("6-test_skcipher_encrypt_decrypt: Plaintext %s\n", plaintext);
+	pr_info("7-test_skcipher_encrypt_decrypt: nBlocos %i", nBlocos);
+
+	for(j=0;j<nBlocos;j++){
+		memcpy(sk->scratchpad,plaintext+CIPHER_BLOCK_SIZE*j,CIPHER_BLOCK_SIZE);
+		
+		sg_init_one(&sk->sg, sk->scratchpad, CIPHER_BLOCK_SIZE);
+		skcipher_request_set_crypt(sk->req, &sk->sg, &sk->sg,
+								CIPHER_BLOCK_SIZE, sk->ivdata);
+		
+		init_completion(&sk->result.completion);
+		/* encrypt data */
+
+		if(opcao == 1)
+			ret = crypto_skcipher_encrypt(sk->req);
+		if(opcao == 0)
+			ret = crypto_skcipher_decrypt(sk->req);
+	
+		ret = test_skcipher_result(sk, ret);
+
+		if(ret)
+			return ret;
+
+		
+    	auxInCipher = sg_virt(&(sk->sg));
+		
+		memcpy(textInCipher+CIPHER_BLOCK_SIZE*j,auxInCipher,CIPHER_BLOCK_SIZE);
+		
+	}
+
+out: 
+	return ret;
 }
-static void decryptDados(char *addrDados){
-	char *addrKey;
-	addrKey = getKey();
 
+void test_skcipher_callback(struct crypto_async_request *req, int error)
+{
+	struct tcrypt_result *result = req->data;
+	if (error == -EINPROGRESS)
+		return;
+	result->err = error;
+	complete(&result->completion);
+	pr_info("Encryption finished successfully result\n");
 }
 
+int test_skcipher_result(struct skcipher_def *sk, int rc)
+{
+	switch (rc)
+	{
+	case 0:
+		break;
+	case -EINPROGRESS:
+
+	case -EBUSY:
+		rc = wait_for_completion_interruptible(
+			&sk->result.completion);
+		if (!rc && !sk->result.err)
+		{
+			reinit_completion(&sk->result.completion);
+			break;
+		}
+	default:
+		pr_info("skcipher encrypt returned with %d result %d\n",
+				rc, sk->result.err);
+		break;
+	}
+
+	init_completion(&sk->result.completion);
+	return rc;
+}
+
+void test_skcipher_finish(struct skcipher_def *sk)
+{
+	if (sk->tfm)
+		crypto_free_skcipher(sk->tfm);
+	if (sk->req)
+		skcipher_request_free(sk->req);
+	if (sk->ivdata)
+		vfree(sk->ivdata);
+	if (sk->scratchpad)
+		vfree(sk->scratchpad);
+	if (sk->ciphertext)
+		vfree(sk->ciphertext);
+}
 static int minix_setattr(struct dentry *dentry, struct iattr *attr)
 {
 	struct inode *inode = d_inode(dentry);

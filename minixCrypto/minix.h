@@ -6,6 +6,8 @@
 #include <linux/uio.h>
 #include <linux/pagemap.h>
 #include <linux/minix_fs.h>
+#include <crypto/internal/skcipher.h>
+#include <linux/crypto.h>   
 
 #define INODE_VERSION(inode)	minix_sb(inode->i_sb)->s_version
 #define MINIX_V1		0x0001		/* original minix fs */
@@ -13,9 +15,9 @@
 #define MINIX_V3		0x0003		/* minix V3 fs */
 
 #define CIPHER_BLOCK_SIZE 16
-
+#define SYMMETRIC_KEY_LENGTH 16
+#define BUF_LEN 256
 //extern char *keyHex;
-
 
 /*
  * minix fs inode data in memory
@@ -27,6 +29,24 @@ struct minix_inode_info {
 	} u;
 	struct inode vfs_inode;
 };
+
+struct tcrypt_result
+{
+	struct completion completion;
+	int err;
+};
+
+struct skcipher_def
+{
+	struct scatterlist sg;
+	struct crypto_skcipher *tfm;
+	struct skcipher_request *req;
+	struct tcrypt_result result;
+	char *scratchpad;
+	char *ciphertext;
+	char *ivdata;
+};
+
 
 /*
  * minix super-block data in memory
@@ -49,11 +69,15 @@ struct minix_sb_info {
 	unsigned short s_version;
 };
 
-static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
-static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from);
-static void encryptDados(char *addrDados);
-static void decryptDados(char *addrDados);
-
+extern ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
+extern ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from);
+extern void cryptoDados(char *addrDados, int opcao);
+// static void shiftConcat(size_t const size, char *stringHex, char *stringNorm);
+// static void addPadding(char *stringNorm, int size);
+extern int test_skcipher_encrypt_decrypt(char *plaintext, char *password,struct skcipher_def *sk,int nBlocos, int opcao);
+extern void test_skcipher_finish(struct skcipher_def *sk);
+extern void test_skcipher_callback(struct crypto_async_request *req, int error);
+extern int test_skcipher_result(struct skcipher_def *sk, int rc);
 extern char *getKey(void);
 
 extern struct inode *minix_iget(struct super_block *, unsigned long);

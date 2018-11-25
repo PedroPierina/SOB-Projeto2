@@ -33,7 +33,7 @@ char* getKey(void){
 
 static void minix_evict_inode(struct inode *inode)
 {
-	pr_info("inode:minix_evict_inode");
+	
 	truncate_inode_pages_final(&inode->i_data);
 	if (!inode->i_nlink) {
 
@@ -50,7 +50,7 @@ static void minix_put_super(struct super_block *sb)
 {
 	int i;
 	struct minix_sb_info *sbi = minix_sb(sb);
-	pr_info("inode:minix_put_super");
+	
 	if (!sb_rdonly(sb)) {
 		if (sbi->s_version != MINIX_V3)	 /* s_state is now out from V3 sb */
 			sbi->s_ms->s_state = sbi->s_mount_state;
@@ -71,7 +71,7 @@ static struct kmem_cache * minix_inode_cachep;
 static struct inode *minix_alloc_inode(struct super_block *sb)
 {
 	struct minix_inode_info *ei;
-	pr_info("inode:minix_alloc_inode");
+	
 	ei = kmem_cache_alloc(minix_inode_cachep, GFP_KERNEL);
 	if (!ei)
 		return NULL;
@@ -81,26 +81,26 @@ static struct inode *minix_alloc_inode(struct super_block *sb)
 static void minix_i_callback(struct rcu_head *head)
 {
 	struct inode *inode = container_of(head, struct inode, i_rcu);
-	pr_info("inode:minix_i_callback");
+	
 	kmem_cache_free(minix_inode_cachep, minix_i(inode));
 }
 
 static void minix_destroy_inode(struct inode *inode)
 {
-	pr_info("inode:minix_destroy_inode");
+	
 	call_rcu(&inode->i_rcu, minix_i_callback);
 }
 
 static void init_once(void *foo)
 {
 	struct minix_inode_info *ei = (struct minix_inode_info *) foo;
-	pr_info("inode:init_once");
+	
 	inode_init_once(&ei->vfs_inode);
 }
 
 static int __init init_inodecache(void)
 {
-	pr_info("inode:init_inodecache");
+	
 	pr_info("key: %s",key);
 	minix_inode_cachep = kmem_cache_create("minix_inode_cache",
 					     sizeof(struct minix_inode_info),
@@ -118,7 +118,7 @@ static void destroy_inodecache(void)
 	 * Make sure all delayed rcu free inodes are flushed before we
 	 * destroy cache.
 	 */
-	pr_info("inode:destroy_inodecache");
+	
 	rcu_barrier();
 	kmem_cache_destroy(minix_inode_cachep);
 }
@@ -137,7 +137,7 @@ static int minix_remount (struct super_block * sb, int * flags, char * data)
 {
 	struct minix_sb_info * sbi = minix_sb(sb);
 	struct minix_super_block * ms;
-	pr_info("inode:minix_remount");
+	
 	sync_filesystem(sb);
 	ms = sbi->s_ms;
 	if ((bool)(*flags & SB_RDONLY) == sb_rdonly(sb))
@@ -180,7 +180,7 @@ static int minix_fill_super(struct super_block *s, void *data, int silent)
 	struct inode *root_inode;
 	struct minix_sb_info *sbi;
 	int ret = -EINVAL;
-	pr_info("inode:minix_fill_super");
+	
 	sbi = kzalloc(sizeof(struct minix_sb_info), GFP_KERNEL);
 	if (!sbi)
 		return -ENOMEM;
@@ -385,14 +385,14 @@ static int minix_statfs(struct dentry *dentry, struct kstatfs *buf)
 	buf->f_fsid.val[0] = (u32)id;
 	buf->f_fsid.val[1] = (u32)(id >> 32);
 
-	pr_info("inode:minix_statfs");
+	
 	return 0;
 }
 
 static int minix_get_block(struct inode *inode, sector_t block,
 		    struct buffer_head *bh_result, int create)
 {
-	pr_info("inode:minix_get_block");
+	
 	if (INODE_VERSION(inode) == MINIX_V1)
 		return V1_minix_get_block(inode, block, bh_result, create);
 	else
@@ -401,26 +401,26 @@ static int minix_get_block(struct inode *inode, sector_t block,
 
 static int minix_writepage(struct page *page, struct writeback_control *wbc)
 {
-	pr_info("inode:minix_writepage");
+	
 	return block_write_full_page(page, minix_get_block, wbc);
 }
 
 static int minix_readpage(struct file *file, struct page *page)
 {
-	pr_info("inode:minix_readpage");
+	
 	return block_read_full_page(page,minix_get_block);
 }
 
 int minix_prepare_chunk(struct page *page, loff_t pos, unsigned len)
 {
-	pr_info("inode:minix_prepare_chunk");
+	
 	return __block_write_begin(page, pos, len, minix_get_block);
 }
 
 static void minix_write_failed(struct address_space *mapping, loff_t to)
 {
 	struct inode *inode = mapping->host;
-	pr_info("inode:minix_write_failed");
+	
 	if (to > inode->i_size) {
 		truncate_pagecache(inode, inode->i_size);
 		minix_truncate(inode);
@@ -432,7 +432,7 @@ static int minix_write_begin(struct file *file, struct address_space *mapping,
 			struct page **pagep, void **fsdata)
 {
 	int ret;
-	pr_info("inode:minix_write_begin");
+	
 	ret = block_write_begin(mapping, pos, len, flags, pagep,
 				minix_get_block);
 	if (unlikely(ret))
@@ -443,7 +443,7 @@ static int minix_write_begin(struct file *file, struct address_space *mapping,
 
 static sector_t minix_bmap(struct address_space *mapping, sector_t block)
 {
-	pr_info("inode:minix_bmap");
+	
 	return generic_block_bmap(mapping,block,minix_get_block);
 }
 
@@ -462,7 +462,7 @@ static const struct inode_operations minix_symlink_inode_operations = {
 
 void minix_set_inode(struct inode *inode, dev_t rdev)
 {
-	pr_info("inode:minix_set_inode");
+	
 	if (S_ISREG(inode->i_mode)) {
 		inode->i_op = &minix_file_inode_operations;
 		inode->i_fop = &minix_file_operations;
@@ -488,7 +488,7 @@ static struct inode *V1_minix_iget(struct inode *inode)
 	struct minix_inode * raw_inode;
 	struct minix_inode_info *minix_inode = minix_i(inode);
 	int i;
-	pr_info("inode:V1_minix_iget");
+	
 	raw_inode = minix_V1_raw_inode(inode->i_sb, inode->i_ino, &bh);
 	if (!raw_inode) {
 		iget_failed(inode);
@@ -521,7 +521,7 @@ static struct inode *V2_minix_iget(struct inode *inode)
 	struct minix2_inode * raw_inode;
 	struct minix_inode_info *minix_inode = minix_i(inode);
 	int i;
-	pr_info("inode:V2_minix_iget");
+	
 	raw_inode = minix_V2_raw_inode(inode->i_sb, inode->i_ino, &bh);
 	if (!raw_inode) {
 		iget_failed(inode);
@@ -553,7 +553,7 @@ static struct inode *V2_minix_iget(struct inode *inode)
 struct inode *minix_iget(struct super_block *sb, unsigned long ino)
 {
 	struct inode *inode;
-	pr_info("inode:minix_iget");
+	
 	inode = iget_locked(sb, ino);
 	if (!inode)
 		return ERR_PTR(-ENOMEM);
@@ -575,7 +575,7 @@ static struct buffer_head * V1_minix_update_inode(struct inode * inode)
 	struct minix_inode * raw_inode;
 	struct minix_inode_info *minix_inode = minix_i(inode);
 	int i;
-	pr_info("inode:buffer_head");
+	
 	raw_inode = minix_V1_raw_inode(inode->i_sb, inode->i_ino, &bh);
 	if (!raw_inode)
 		return NULL;
@@ -602,7 +602,7 @@ static struct buffer_head * V2_minix_update_inode(struct inode * inode)
 	struct minix2_inode * raw_inode;
 	struct minix_inode_info *minix_inode = minix_i(inode);
 	int i;
-	pr_info("inode:V2_minix_update_inode");
+	
 	raw_inode = minix_V2_raw_inode(inode->i_sb, inode->i_ino, &bh);
 	if (!raw_inode)
 		return NULL;
@@ -626,7 +626,7 @@ static int minix_write_inode(struct inode *inode, struct writeback_control *wbc)
 {
 	int err = 0;
 	struct buffer_head *bh;
-	pr_info("inode:minix_write_inode");
+	
 	if (INODE_VERSION(inode) == MINIX_V1)
 		bh = V1_minix_update_inode(inode);
 	else
@@ -650,7 +650,7 @@ int minix_getattr(const struct path *path, struct kstat *stat,
 {
 	struct super_block *sb = path->dentry->d_sb;
 	struct inode *inode = d_inode(path->dentry);
-	pr_info("inode:minix_getattr");
+	
 	generic_fillattr(inode, stat);
 	if (INODE_VERSION(inode) == MINIX_V1)
 		stat->blocks = (BLOCK_SIZE / 512) * V1_minix_blocks(stat->size, sb);
@@ -665,7 +665,7 @@ int minix_getattr(const struct path *path, struct kstat *stat,
  */
 void minix_truncate(struct inode * inode)
 {
-	pr_info("inode:minix_truncate");
+	
 	if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode) || S_ISLNK(inode->i_mode)))
 		return;
 	if (INODE_VERSION(inode) == MINIX_V1)
@@ -677,7 +677,7 @@ void minix_truncate(struct inode * inode)
 static struct dentry *minix_mount(struct file_system_type *fs_type,
 	int flags, const char *dev_name, void *data)
 {
-	pr_info("inode:minix_mount");
+	
 	return mount_bdev(fs_type, flags, dev_name, data, minix_fill_super);
 }
 
@@ -693,8 +693,7 @@ MODULE_ALIAS_FS("minix");
 static int __init init_minix_fs(void)
 {
 	int err = init_inodecache();
-	pr_info("inode:init_minix_fs");
-
+	
 	if (err)
 		goto out1;
 	err = register_filesystem(&minix_fs_type);
@@ -709,8 +708,8 @@ out1:
 
 static void __exit exit_minix_fs(void)
 {
-	pr_info("inode:exit_minix_fs");
-        unregister_filesystem(&minix_fs_type);
+	
+    unregister_filesystem(&minix_fs_type);
 	destroy_inodecache();
 }
 

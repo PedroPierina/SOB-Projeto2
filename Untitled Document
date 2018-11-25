@@ -1,0 +1,202 @@
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:50:28: warning: ‘sk’ defined but not used [-Wunused-variable]
+ static struct skcipher_def sk;
+                            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:72:16: warning: ‘write_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:73:16: warning: ‘read_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:74:13: warning: ‘cryptoDados’ declared ‘static’ but never defined [-Wunused-function]
+ static void cryptoDados(char *addrDados, int opcao);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:75:13: warning: ‘shiftConcat’ declared ‘static’ but never defined [-Wunused-function]
+ static void shiftConcat(size_t const size, char *stringHex, char *stringNorm);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:76:13: warning: ‘addPadding’ declared ‘static’ but never defined [-Wunused-function]
+ static void addPadding(char *stringNorm, int size);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:77:12: warning: ‘test_skcipher_encrypt_decrypt’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_encrypt_decrypt(char *plaintext, char *password,
+            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:81:13: warning: ‘test_skcipher_finish’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_finish(struct skcipher_def *sk);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:82:13: warning: ‘test_skcipher_callback’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_callback(struct crypto_async_request *req, int error)
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:83:12: warning: ‘test_skcipher_result’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_result(struct skcipher_def *sk, int rc);
+            ^
+In file included from /home/soul/Downloads/SOB-Projeto2/minixCrypto/itree_v1.c:4:0:
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:50:28: warning: ‘sk’ defined but not used [-Wunused-variable]
+ static struct skcipher_def sk;
+                            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:72:16: warning: ‘write_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:73:16: warning: ‘read_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:74:13: warning: ‘cryptoDados’ declared ‘static’ but never defined [-Wunused-function]
+ static void cryptoDados(char *addrDados, int opcao);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:75:13: warning: ‘shiftConcat’ declared ‘static’ but never defined [-Wunused-function]
+ static void shiftConcat(size_t const size, char *stringHex, char *stringNorm);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:76:13: warning: ‘addPadding’ declared ‘static’ but never defined [-Wunused-function]
+ static void addPadding(char *stringNorm, int size);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:77:12: warning: ‘test_skcipher_encrypt_decrypt’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_encrypt_decrypt(char *plaintext, char *password,
+            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:81:13: warning: ‘test_skcipher_finish’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_finish(struct skcipher_def *sk);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:82:13: warning: ‘test_skcipher_callback’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_callback(struct crypto_async_request *req, int error)
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:83:12: warning: ‘test_skcipher_result’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_result(struct skcipher_def *sk, int rc);
+            ^
+In file included from /home/soul/Downloads/SOB-Projeto2/minixCrypto/itree_v2.c:3:0:
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:50:28: warning: ‘sk’ defined but not used [-Wunused-variable]
+ static struct skcipher_def sk;
+                            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:72:16: warning: ‘write_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:73:16: warning: ‘read_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:74:13: warning: ‘cryptoDados’ declared ‘static’ but never defined [-Wunused-function]
+ static void cryptoDados(char *addrDados, int opcao);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:75:13: warning: ‘shiftConcat’ declared ‘static’ but never defined [-Wunused-function]
+ static void shiftConcat(size_t const size, char *stringHex, char *stringNorm);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:76:13: warning: ‘addPadding’ declared ‘static’ but never defined [-Wunused-function]
+ static void addPadding(char *stringNorm, int size);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:77:12: warning: ‘test_skcipher_encrypt_decrypt’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_encrypt_decrypt(char *plaintext, char *password,
+            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:81:13: warning: ‘test_skcipher_finish’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_finish(struct skcipher_def *sk);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:82:13: warning: ‘test_skcipher_callback’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_callback(struct crypto_async_request *req, int error)
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:83:12: warning: ‘test_skcipher_result’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_result(struct skcipher_def *sk, int rc);
+            ^
+In file included from /home/soul/Downloads/SOB-Projeto2/minixCrypto/namei.c:8:0:
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:50:28: warning: ‘sk’ defined but not used [-Wunused-variable]
+ static struct skcipher_def sk;
+                            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:72:16: warning: ‘write_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:73:16: warning: ‘read_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:74:13: warning: ‘cryptoDados’ declared ‘static’ but never defined [-Wunused-function]
+ static void cryptoDados(char *addrDados, int opcao);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:75:13: warning: ‘shiftConcat’ declared ‘static’ but never defined [-Wunused-function]
+ static void shiftConcat(size_t const size, char *stringHex, char *stringNorm);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:76:13: warning: ‘addPadding’ declared ‘static’ but never defined [-Wunused-function]
+ static void addPadding(char *stringNorm, int size);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:77:12: warning: ‘test_skcipher_encrypt_decrypt’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_encrypt_decrypt(char *plaintext, char *password,
+            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:81:13: warning: ‘test_skcipher_finish’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_finish(struct skcipher_def *sk);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:82:13: warning: ‘test_skcipher_callback’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_callback(struct crypto_async_request *req, int error)
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:83:12: warning: ‘test_skcipher_result’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_result(struct skcipher_def *sk, int rc);
+            ^
+In file included from /home/soul/Downloads/SOB-Projeto2/minixCrypto/inode.c:14:0:
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:50:28: warning: ‘sk’ defined but not used [-Wunused-variable]
+ static struct skcipher_def sk;
+                            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:72:16: warning: ‘write_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:73:16: warning: ‘read_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:74:13: warning: ‘cryptoDados’ declared ‘static’ but never defined [-Wunused-function]
+ static void cryptoDados(char *addrDados, int opcao);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:75:13: warning: ‘shiftConcat’ declared ‘static’ but never defined [-Wunused-function]
+ static void shiftConcat(size_t const size, char *stringHex, char *stringNorm);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:76:13: warning: ‘addPadding’ declared ‘static’ but never defined [-Wunused-function]
+ static void addPadding(char *stringNorm, int size);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:77:12: warning: ‘test_skcipher_encrypt_decrypt’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_encrypt_decrypt(char *plaintext, char *password,
+            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:81:13: warning: ‘test_skcipher_finish’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_finish(struct skcipher_def *sk);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:82:13: warning: ‘test_skcipher_callback’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_callback(struct crypto_async_request *req, int error)
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:83:12: warning: ‘test_skcipher_result’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_result(struct skcipher_def *sk, int rc);
+            ^
+In file included from /home/soul/Downloads/SOB-Projeto2/minixCrypto/file.c:10:0:
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:75:13: warning: ‘shiftConcat’ declared ‘static’ but never defined [-Wunused-function]
+ static void shiftConcat(size_t const size, char *stringHex, char *stringNorm);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:76:13: warning: ‘addPadding’ declared ‘static’ but never defined [-Wunused-function]
+ static void addPadding(char *stringNorm, int size);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/file.c:30:12: warning: ‘keySize’ defined but not used [-Wunused-variable]
+ static int keySize;
+            ^
+In file included from /home/soul/Downloads/SOB-Projeto2/minixCrypto/dir.c:12:0:
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:50:28: warning: ‘sk’ defined but not used [-Wunused-variable]
+ static struct skcipher_def sk;
+                            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:72:16: warning: ‘write_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:73:16: warning: ‘read_modified’ declared ‘static’ but never defined [-Wunused-function]
+ static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from);
+                ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:74:13: warning: ‘cryptoDados’ declared ‘static’ but never defined [-Wunused-function]
+ static void cryptoDados(char *addrDados, int opcao);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:75:13: warning: ‘shiftConcat’ declared ‘static’ but never defined [-Wunused-function]
+ static void shiftConcat(size_t const size, char *stringHex, char *stringNorm);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:76:13: warning: ‘addPadding’ declared ‘static’ but never defined [-Wunused-function]
+ static void addPadding(char *stringNorm, int size);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:77:12: warning: ‘test_skcipher_encrypt_decrypt’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_encrypt_decrypt(char *plaintext, char *password,
+            ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:81:13: warning: ‘test_skcipher_finish’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_finish(struct skcipher_def *sk);
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:82:13: warning: ‘test_skcipher_callback’ declared ‘static’ but never defined [-Wunused-function]
+ static void test_skcipher_callback(struct crypto_async_request *req, int error)
+             ^
+/home/soul/Downloads/SOB-Projeto2/minixCrypto/minix.h:83:12: warning: ‘test_skcipher_result’ declared ‘static’ but never defined [-Wunused-function]
+ static int test_skcipher_result(struct skcipher_def *sk, int rc);
+            ^
+
+teste teste teste
+teste teste teste
+teste teste teste
+teste teste teste
+teste teste teste
+teste teste teste
