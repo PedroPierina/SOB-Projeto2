@@ -9,6 +9,10 @@
 
 #include "minix.h"
 #include <linux/crypto.h>
+#include <linux/delay.h>
+
+static char stringAux[400];
+
 //static size_t teste(struct kiocb *iocb, struct iov_iter *from);
 /*
  * We have mostly NULLs here: the current defaults are OK for
@@ -23,62 +27,131 @@ const struct file_operations minix_file_operations = {
 	.splice_read 	= generic_file_splice_read,
 };
 
-static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from){
+ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from){
 
-	char *addrDados = (char *)(from->iov->iov_base);
-
-	pr_info("file: teste %s", addrDados);
-	pr_info("file: key %s", getKey());
-
-	encryptDados(&addrDados);
+	encryptDados((char **)&(from->iov->iov_base));
 	
 	return generic_file_write_iter(iocb,from);
 }
 
-static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from){
+ssize_t read_modified(struct kiocb *iocb, struct iov_iter *iter){
+	int delay;
 
-	char *addrDados = (char *)(from->iov->iov_base);
-	
-	return generic_file_read_iter(iocb,from);
+	for(delay = 0; delay < 10000; delay++){
+		if(strlen(*(char **)&(iter->iov->iov_base)) > 0) break;
+	}
+	if(delay == 10000){
+		pr_info("Chegou porra nenhuma");
+	}
+	else{
+		decryptDados((char **)&(iter->iov->iov_base));
+		//decryptDados((char **)&(iter->iov->iov_base));
+	}
+	return generic_file_read_iter(iocb,iter);
 }
 
-static void encryptDados(char **addrDados){
-	char *addrKey, block[CIPHER_BLOCK_SIZE];
-	int numBlocos, byteslastblock, i, j;
+void encryptDados(char **addrDados){
+	char *addrKey;
+	char *interator;
+	//char *stringEncriptada = stringAux;
+	int numBlocos, byteslastblock, i;
 	struct crypto_cipher *tfm;
-
+	
+	interator = *addrDados;
 	// Get Cipher Key
 	addrKey = getKey();
+	pr_info("key in encrypt: %s", addrKey);
 
 	// Number or blocks and number of lastblock and number of bytes in last block
-	numBlocos = strlen(addrDados)/CIPHER_BLOCK_SIZE;
-	byteslastblock = strlen(addrDados)%CIPHER_BLOCK_SIZE;
+	numBlocos = strlen(*addrDados)/CIPHER_BLOCK_SIZE;
+	byteslastblock = strlen(*addrDados)%CIPHER_BLOCK_SIZE;
 	if(byteslastblock) numBlocos++;
+	pr_info("Numeros Calculados: numblocos: %d, byteslastblock: %d", numBlocos, byteslastblock);
+
+	// Alloc memory for the result
+	// stringEncriptada = kmalloc(CIPHER_BLOCK_SIZE * numBlocos, GFP_KERNEL);
+	// memset(stringEncriptada, 0, CIPHER_BLOCK_SIZE * numBlocos);
+	// pr_info("StringEncryptada deve ser vazia: %s", stringEncriptada);
 
 	// Alloc crypto
-	tfm = crypto_alloc_cipher("ecb-aes-aesni", 0, CIPHER_BLOCK_SIZE);
+	tfm = crypto_alloc_cipher("aes", 0, CIPHER_BLOCK_SIZE);
 	crypto_cipher_setkey(tfm, addrKey, CIPHER_BLOCK_SIZE);
+	pr_info("Cripto Alocado");
 
+	pr_info("Dados decifrados write: %s", *addrDados);
 	// Encrypting
 	for(i = 0; i < numBlocos; i++){
-		// if(byteslastblock && i == numBlocos - 1){
-		// 	for(j = byteslastblock; j < CIPHER_BLOCK_SIZE; j++){
-		// 		addrDados[i*CIPHER_BLOCK_SIZE + j] = 0;
-		// 	}
-		// }
-		crypto_cipher_encrypt_one(tfm, block, *addrDados);
-		pr_info("Block %i: %s", block);
-		memcpy(*addrDados, block, CIPHER_BLOCK_SIZE);
-		*addrDados += CIPHER_BLOCK_SIZE;
+		
+		crypto_cipher_encrypt_one(tfm, stringAux + (CIPHER_BLOCK_SIZE * i), interator);
+		
+		interator = interator + CIPHER_BLOCK_SIZE;
 	}
+	// Copy result to data
+	// pr_info("Before memcpy: %s", *addrDados);
+	// memcpy(*addrDados, stringEncriptada, (numBlocos-1) * CIPHER_BLOCK_SIZE + byteslastblock);
+	// pr_info("Dados cifrados write: %s", *addrDados);
+	*addrDados = stringAux;
 	
-	// Free crypto
+	// Free crypto and stringEncriptada
 	crypto_free_cipher(tfm);
+	//kfree(stringEncriptada);
 
 }
-static void decryptDados(char *addrDados){
+
+int decryptDados(char **addrDados){
 	char *addrKey;
+	char *interator;
+	//char *stringDecriptada = stringAux;
+	int numBlocos, byteslastblock, i;
+	struct crypto_cipher *tfm;
+
+	// Delay to recive data
+	udelay(5000);
+
+	
+	// Get Cipher Key
 	addrKey = getKey();
+	pr_info("key in decrypt: %s", addrKey);
+
+	// Number or blocks and number of lastblock and number of bytes in last block
+	numBlocos = strlen(*addrDados)/CIPHER_BLOCK_SIZE;
+	byteslastblock = strlen(*addrDados)%CIPHER_BLOCK_SIZE;
+	if(byteslastblock) numBlocos++;
+	pr_info("Numeros Calculados: numblocos: %d, byteslastblock: %d", numBlocos, byteslastblock);
+
+
+	// Alloc memory for the result
+	// stringDecriptada = kmalloc(CIPHER_BLOCK_SIZE * numBlocos, GFP_KERNEL);
+	// memset(stringDecriptada, 0, CIPHER_BLOCK_SIZE * numBlocos);
+	// pr_info("StringEncryptada deve ser vazia: %s", stringDecriptada);
+
+	// Alloc crypto
+	tfm = crypto_alloc_cipher("aes", 0, CIPHER_BLOCK_SIZE);
+	crypto_cipher_setkey(tfm, addrKey, CIPHER_BLOCK_SIZE);
+	pr_info("Cripto Alocado");
+
+	pr_info("Dados cifrados read: %s", *addrDados);
+
+	// Decrypting
+	interator = *addrDados;
+	for(i = 0; i < numBlocos; i++){
+
+		crypto_cipher_decrypt_one(tfm, stringAux + (CIPHER_BLOCK_SIZE * i), interator);
+
+		interator = interator + CIPHER_BLOCK_SIZE;
+		
+	}
+	// Copy result to data
+	// pr_info("Before memcpy: %s", stringDecriptada);
+	// memcpy(*addrDados, stringDecriptada,  (numBlocos-1) * CIPHER_BLOCK_SIZE + byteslastblock);
+	*addrDados = stringAux;
+	// strcpy(*addrDados, stringDecriptada);
+	pr_info("Dados decifrados read: %s", *addrDados);
+	
+	// Free crypto and stringDecriptada
+	crypto_free_cipher(tfm);
+	//kfree(stringDecriptada);
+	return 0;
 
 }
 

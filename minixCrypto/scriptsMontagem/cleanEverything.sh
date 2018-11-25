@@ -1,6 +1,7 @@
 #!/bin/bash
 
 cd ../..
+rm device/*
 umount device/
 bash scriptsImportantes/cleanLoops.sh 0 20
 

@@ -49,10 +49,10 @@ struct minix_sb_info {
 	unsigned short s_version;
 };
 
-static ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
-static ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from);
-static void encryptDados(char *addrDados);
-static void decryptDados(char *addrDados);
+extern ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
+extern ssize_t read_modified(struct kiocb *iocb, struct iov_iter *iter);
+extern void encryptDados(char **addrDados);
+extern int decryptDados(char **addrDados);
 
 extern char *getKey(void);
 
