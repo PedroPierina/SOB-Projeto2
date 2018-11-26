@@ -20,7 +20,7 @@
 #include <linux/writeback.h>
 
 static char *key;
-static char keyHex[16];
+static char keyHex[17];
 module_param(key, charp, 0);
 
 static int minix_write_inode(struct inode *inode,
@@ -55,7 +55,7 @@ static void shiftConcat(char *string, char *stringNorm)
 		stringNorm[i] = (stringHex[j] << 4) + stringHex[j + 1];
 		j += 2;
 	}
-	stringNorm[j] = '\0';
+	stringNorm[i] = '\0';
 }
 
 char* getKey(void){

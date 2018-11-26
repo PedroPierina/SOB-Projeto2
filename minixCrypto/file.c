@@ -87,8 +87,8 @@ void cryptoDados(char **addrDados, int opcao, size_t *sizeiov){
 	nBlocos = size/CIPHER_BLOCK_SIZE;
 	if(size%CIPHER_BLOCK_SIZE)nBlocos++;
 	*sizeiov = nBlocos * CIPHER_BLOCK_SIZE;
-	stringAux = (char*)kmalloc((nBlocos + 1) * CIPHER_BLOCK_SIZE, GFP_KERNEL);
-	memset(stringAux, 0, (nBlocos + 1) * CIPHER_BLOCK_SIZE);
+	stringAux = (char*)vmalloc(nBlocos * CIPHER_BLOCK_SIZE);
+	memset(stringAux, 0, nBlocos * CIPHER_BLOCK_SIZE);
 	memcpy(stringAux, *addrDados, size);
 
 	pr_info("4-cryptoDados: nBlocos %d", nBlocos);
@@ -102,7 +102,7 @@ void cryptoDados(char **addrDados, int opcao, size_t *sizeiov){
 	test_skcipher_finish(&sk);
 	/*----------------------------------------------------------------*/
 	memcpy(*addrDados, stringAux, nBlocos * CIPHER_BLOCK_SIZE);
-	kfree(stringAux);
+	vfree(stringAux);
 	return;
 }
 
