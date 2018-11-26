@@ -29,8 +29,7 @@ else
     bash createFS.sh
     cd ../..
 
-    cp test* ./device
-    cp gui.jpg ./device
+    cp test.txt ./device
     cd minixCrypto
 fi
 

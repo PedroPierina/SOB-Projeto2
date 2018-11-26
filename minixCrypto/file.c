@@ -11,8 +11,6 @@
 #include <linux/crypto.h>
 #include <linux/delay.h>
 
-static char stringAux[400];
-
 //static size_t teste(struct kiocb *iocb, struct iov_iter *from);
 /*
  * We have mostly NULLs here: the current defaults are OK for
@@ -27,9 +25,15 @@ const struct file_operations minix_file_operations = {
 	.splice_read 	= generic_file_splice_read,
 };
 
-ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from){
+static struct info_files arquivos;
 
-	encryptDados((char **)&(from->iov->iov_base));
+
+ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from){
+	arquivos.id = 0;
+	if(arquivos.id == 0){
+		arquivos.sizeFileDecrypted = from->count;
+	}
+	encryptDados(from, arquivos.id);
 	
 	return generic_file_write_iter(iocb,from);
 }
@@ -38,40 +42,45 @@ ssize_t read_modified(struct kiocb *iocb, struct iov_iter *iter){
 	int delay;
 
 	for(delay = 0; delay < 10000; delay++){
-		if(strlen(*(char **)&(iter->iov->iov_base)) > 0) break;
+		if(strlen((char*)iter->iov->iov_base) > 0) break;
 	}
 	if(delay == 10000){
 		pr_info("Chegou porra nenhuma");
 	}
 	else{
-		decryptDados((char **)&(iter->iov->iov_base));
-		//decryptDados((char **)&(iter->iov->iov_base));
+		pr_info("Dados antes de entrar no decrypt %s", (char*)iter->iov->iov_base);		
+		decryptDados(iter, 0);
 	}
 	return generic_file_read_iter(iocb,iter);
 }
 
-void encryptDados(char **addrDados){
+void encryptDados(struct iov_iter *from, int id){
 	char *addrKey;
+	struct info_files *fileInfo = &arquivos;
 	char *interator;
-	//char *stringEncriptada = stringAux;
+	char **addrDados = (char**)&(from->iov->iov_base);
+	char *stringEncriptada;
 	int numBlocos, byteslastblock, i;
 	struct crypto_cipher *tfm;
 	
 	interator = *addrDados;
 	// Get Cipher Key
 	addrKey = getKey();
-	pr_info("key in encrypt: %s", addrKey);
 
 	// Number or blocks and number of lastblock and number of bytes in last block
-	numBlocos = strlen(*addrDados)/CIPHER_BLOCK_SIZE;
-	byteslastblock = strlen(*addrDados)%CIPHER_BLOCK_SIZE;
+	if((*fileInfo).id != id){
+		pr_info("Arquivo Errado");
+	}
+	numBlocos = (*fileInfo).sizeFileDecrypted/CIPHER_BLOCK_SIZE;
+	byteslastblock = (*fileInfo).sizeFileDecrypted%CIPHER_BLOCK_SIZE;
 	if(byteslastblock) numBlocos++;
+	(*fileInfo).sizeFileEncrypted = numBlocos * CIPHER_BLOCK_SIZE;
 	pr_info("Numeros Calculados: numblocos: %d, byteslastblock: %d", numBlocos, byteslastblock);
 
 	// Alloc memory for the result
-	// stringEncriptada = kmalloc(CIPHER_BLOCK_SIZE * numBlocos, GFP_KERNEL);
-	// memset(stringEncriptada, 0, CIPHER_BLOCK_SIZE * numBlocos);
-	// pr_info("StringEncryptada deve ser vazia: %s", stringEncriptada);
+	stringEncriptada = kmalloc(CIPHER_BLOCK_SIZE * numBlocos, GFP_KERNEL);
+	memset(stringEncriptada, 0, CIPHER_BLOCK_SIZE * numBlocos);
+	pr_info("StringEncryptada deve ser vazia: %s", stringEncriptada);
 
 	// Alloc crypto
 	tfm = crypto_alloc_cipher("aes", 0, CIPHER_BLOCK_SIZE);
@@ -82,27 +91,28 @@ void encryptDados(char **addrDados){
 	// Encrypting
 	for(i = 0; i < numBlocos; i++){
 		
-		crypto_cipher_encrypt_one(tfm, stringAux + (CIPHER_BLOCK_SIZE * i), interator);
+		crypto_cipher_encrypt_one(tfm, stringEncriptada + (CIPHER_BLOCK_SIZE * i), interator);
 		
 		interator = interator + CIPHER_BLOCK_SIZE;
 	}
 	// Copy result to data
-	// pr_info("Before memcpy: %s", *addrDados);
-	// memcpy(*addrDados, stringEncriptada, (numBlocos-1) * CIPHER_BLOCK_SIZE + byteslastblock);
-	// pr_info("Dados cifrados write: %s", *addrDados);
-	*addrDados = stringAux;
+	pr_info("Before memcpy: %s", *addrDados);
+	memcpy(*addrDados, stringEncriptada, (*fileInfo).sizeFileEncrypted);
+	pr_info("Dados cifrados write: %s", *addrDados);
 	
 	// Free crypto and stringEncriptada
 	crypto_free_cipher(tfm);
-	//kfree(stringEncriptada);
+	kfree(stringEncriptada);
 
 }
 
-int decryptDados(char **addrDados){
+void decryptDados(struct iov_iter *iter, int id){
 	char *addrKey;
 	char *interator;
-	//char *stringDecriptada = stringAux;
-	int numBlocos, byteslastblock, i;
+	struct info_files *fileInfo = &arquivos;
+	char **addrDados = (char**)&(iter->iov->iov_base);
+	char *stringDecriptada;
+	int numBlocos, i;
 	struct crypto_cipher *tfm;
 
 	// Delay to recive data
@@ -111,19 +121,17 @@ int decryptDados(char **addrDados){
 	
 	// Get Cipher Key
 	addrKey = getKey();
-	pr_info("key in decrypt: %s", addrKey);
 
 	// Number or blocks and number of lastblock and number of bytes in last block
-	numBlocos = strlen(*addrDados)/CIPHER_BLOCK_SIZE;
-	byteslastblock = strlen(*addrDados)%CIPHER_BLOCK_SIZE;
-	if(byteslastblock) numBlocos++;
-	pr_info("Numeros Calculados: numblocos: %d, byteslastblock: %d", numBlocos, byteslastblock);
-
-
+	if((*fileInfo).id != id){
+		pr_info("Arquivo Errado");
+	}
+	numBlocos = (*fileInfo).sizeFileEncrypted/CIPHER_BLOCK_SIZE;
+	pr_info("size in decrypt: %zd e num blocos %d", (*fileInfo).sizeFileEncrypted, numBlocos);
 	// Alloc memory for the result
-	// stringDecriptada = kmalloc(CIPHER_BLOCK_SIZE * numBlocos, GFP_KERNEL);
-	// memset(stringDecriptada, 0, CIPHER_BLOCK_SIZE * numBlocos);
-	// pr_info("StringEncryptada deve ser vazia: %s", stringDecriptada);
+	stringDecriptada = kmalloc(CIPHER_BLOCK_SIZE * numBlocos, GFP_KERNEL);
+	memset(stringDecriptada, 0, CIPHER_BLOCK_SIZE * numBlocos);
+	pr_info("StringEncryptada deve ser vazia: %s", stringDecriptada);
 
 	// Alloc crypto
 	tfm = crypto_alloc_cipher("aes", 0, CIPHER_BLOCK_SIZE);
@@ -136,22 +144,20 @@ int decryptDados(char **addrDados){
 	interator = *addrDados;
 	for(i = 0; i < numBlocos; i++){
 
-		crypto_cipher_decrypt_one(tfm, stringAux + (CIPHER_BLOCK_SIZE * i), interator);
+		crypto_cipher_decrypt_one(tfm, stringDecriptada + (CIPHER_BLOCK_SIZE * i), interator);
 
 		interator = interator + CIPHER_BLOCK_SIZE;
 		
 	}
 	// Copy result to data
-	// pr_info("Before memcpy: %s", stringDecriptada);
-	// memcpy(*addrDados, stringDecriptada,  (numBlocos-1) * CIPHER_BLOCK_SIZE + byteslastblock);
-	*addrDados = stringAux;
-	// strcpy(*addrDados, stringDecriptada);
+	pr_info("Before memcpy: %s", stringDecriptada);
+	memcpy(*addrDados, stringDecriptada,  (*fileInfo).sizeFileDecrypted);
+	
 	pr_info("Dados decifrados read: %s", *addrDados);
 	
 	// Free crypto and stringDecriptada
 	crypto_free_cipher(tfm);
-	//kfree(stringDecriptada);
-	return 0;
+	kfree(stringDecriptada);
 
 }
 

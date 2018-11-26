@@ -8,19 +8,16 @@ typedef u32 block_t;	/* 32 bit, host order */
 
 static inline unsigned long block_to_cpu(block_t n)
 {
-	pr_info("itree_v2:block_to_cpu");
 	return n;
 }
 
 static inline block_t cpu_to_block(unsigned long n)
 {
-	pr_info("itree_v2:cpu_to_block");
 	return n;
 }
 
 static inline block_t *i_data(struct inode *inode)
 {
-	pr_info("itree_v2:i_data");
 	return (block_t *)minix_i(inode)->u.i2_data;
 }
 
@@ -31,7 +28,6 @@ static int block_to_path(struct inode * inode, long block, int offsets[DEPTH])
 {
 	int n = 0;
 	struct super_block *sb = inode->i_sb;
-	pr_info("itree_v2:block_to_path");
 	if (block < 0) {
 		printk("MINIX-fs: block_to_path: block %ld < 0 on dev %pg\n",
 			block, sb->s_bdev);
@@ -65,18 +61,15 @@ static int block_to_path(struct inode * inode, long block, int offsets[DEPTH])
 int V2_minix_get_block(struct inode * inode, long block,
 			struct buffer_head *bh_result, int create)
 {
-	pr_info("itree_v2:V2_minix_get_block");
 	return get_block(inode, block, bh_result, create);
 }
 
 void V2_minix_truncate(struct inode * inode)
 {
-	pr_info("itree_v2:V2_minix_truncate");
 	truncate(inode);
 }
 
 unsigned V2_minix_blocks(loff_t size, struct super_block *sb)
 {
-	pr_info("itree_v2:V2_minix_blocks");
 	return nblocks(size, sb);
 }

@@ -28,6 +28,12 @@ struct minix_inode_info {
 	struct inode vfs_inode;
 };
 
+struct info_files {
+	int id;
+	size_t sizeFileDecrypted;
+	size_t sizeFileEncrypted;
+	struct info_files *nextFile;
+};
 /*
  * minix super-block data in memory
  */
@@ -51,8 +57,8 @@ struct minix_sb_info {
 
 extern ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
 extern ssize_t read_modified(struct kiocb *iocb, struct iov_iter *iter);
-extern void encryptDados(char **addrDados);
-extern int decryptDados(char **addrDados);
+extern void encryptDados(struct iov_iter *from, int id);
+extern void decryptDados(struct iov_iter *iter, int id);
 
 extern char *getKey(void);
 
