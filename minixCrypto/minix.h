@@ -16,7 +16,6 @@
 
 #define CIPHER_BLOCK_SIZE 16
 #define SYMMETRIC_KEY_LENGTH 16
-#define BUF_LEN 256
 //extern char *keyHex;
 
 /*
@@ -71,10 +70,10 @@ struct minix_sb_info {
 
 extern ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from);
 extern ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from);
-extern void cryptoDados(char *addrDados, int opcao);
+extern void cryptoDados(char **addrDados, int opcao, size_t *sizeiov);
 // static void shiftConcat(size_t const size, char *stringHex, char *stringNorm);
 // static void addPadding(char *stringNorm, int size);
-extern int test_skcipher_encrypt_decrypt(char *plaintext, char *password,struct skcipher_def *sk,int nBlocos, int opcao);
+extern int test_skcipher_encrypt_decrypt(char *plaintext, char *password,struct skcipher_def *sk,int nBlocos,int opcao);
 extern void test_skcipher_finish(struct skcipher_def *sk);
 extern void test_skcipher_callback(struct crypto_async_request *req, int error);
 extern int test_skcipher_result(struct skcipher_def *sk, int rc);

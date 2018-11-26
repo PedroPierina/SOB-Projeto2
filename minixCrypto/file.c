@@ -27,21 +27,14 @@ const struct file_operations minix_file_operations = {
 	.splice_read 	= generic_file_splice_read,
 };
 
-static char textInCipher[BUF_LEN *2];
-static char *auxInCipher;
-static int size_msg;
-
 ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from){
 
-	char *addrDados = (char *)(from->iov->iov_base);
 	char **dadosFinais = (char **)&(from->iov->iov_base);
-	pr_info("file: write %s", addrDados);
-	cryptoDados(addrDados,1);
+	pr_info("file: write %s", *dadosFinais);
+
+	cryptoDados(dadosFinais,1, (size_t *)&(from->iov->iov_len));
 	
-	memcpy(*dadosFinais,textInCipher, size_msg);
-	//size_msg = ((size_msg/CIPHER_BLOCK_SIZE)+1) * CIPHER_BLOCK_SIZE;
-	pr_info("write_modified: Resultado Cifrado resultCrypto %s", textInCipher);
-	pr_info("write_modified: Resultado Cifrado addrDados %s", addrDados);
+	pr_info("write_modified: Resultado Cifrado resultCrypto %s", *dadosFinais);
 	pr_info("write_modified: Resultado Cifrado from->iov->iov_base %s", (char *)(from->iov->iov_base));
 
 	return generic_file_write_iter(iocb,from);
@@ -49,27 +42,25 @@ ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from){
 
 ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from){
 
-	char *addrDados = (char *)(from->iov->iov_base);
 	char **dadosFinais = (char **)&(from->iov->iov_base);
 	ssize_t ret;
-	pr_info("1-file: read %s", addrDados);
+	pr_info("1-file: read %s", *dadosFinais);
 
 	ret = generic_file_read_iter(iocb,from);
-	cryptoDados(addrDados,0);
+	cryptoDados(dadosFinais,0, (size_t *)&(from->iov->iov_len));
 
-	memcpy(*dadosFinais,textInCipher,size_msg);
-	pr_info("9-read_modified: Resultado Decifrado resultCrypto %s", textInCipher);
-	pr_info("10-read_modified: Resultado Decifrado addrDados %s", addrDados);
+	pr_info("9-read_modified: Resultado Decifrado resultCrypto %s", *dadosFinais);
 	pr_info("11-read_modified: Resultado Decifrado from->iov->iov_base %s", (char *)(from->iov->iov_base));
-	//generic_file_write_iter(iocb,from);
-	udelay(10000);
+	
 	return ret;
 }
 
-void cryptoDados(char *addrDados, int opcao){
+void cryptoDados(char **addrDados, int opcao, size_t *sizeiov){
 
 	char *addrKey;
+	char *stringAux;
 	int   nBlocos;
+	int size;
 	
 	sk.tfm = NULL;
 	sk.req = NULL;
@@ -79,7 +70,7 @@ void cryptoDados(char *addrDados, int opcao){
 	
 	
 		
-	
+	size = strlen(*addrDados);
 	/*------------------------Key-----------------------------*/
 	// Get Cipher Key
 
@@ -90,37 +81,38 @@ void cryptoDados(char *addrDados, int opcao){
 	/*--------------------------------------------------------*/
 
 	/*------------------------Trata-Dados-----------------------------*/
-	if(opcao) size_msg = strlen(addrDados);
 
-	pr_info("3-cryptoDados: Tamanho msg %d", size_msg);
+	pr_info("3-cryptoDados: Tamanho msg %d", size);
 
-	nBlocos = size_msg/CIPHER_BLOCK_SIZE;
-	if(size_msg%CIPHER_BLOCK_SIZE){
-		nBlocos++;
-		memset(addrDados + (nBlocos - 1) * CIPHER_BLOCK_SIZE + size_msg%CIPHER_BLOCK_SIZE, 0, CIPHER_BLOCK_SIZE - size_msg%CIPHER_BLOCK_SIZE);
-	} 
+	nBlocos = size/CIPHER_BLOCK_SIZE;
+	if(size%CIPHER_BLOCK_SIZE)nBlocos++;
+	*sizeiov = nBlocos * CIPHER_BLOCK_SIZE;
+	stringAux = (char*)kmalloc((nBlocos + 1) * CIPHER_BLOCK_SIZE, GFP_KERNEL);
+	memset(stringAux, 0, (nBlocos + 1) * CIPHER_BLOCK_SIZE);
+	memcpy(stringAux, *addrDados, size);
+
 	pr_info("4-cryptoDados: nBlocos %d", nBlocos);
 	pr_info("5-cryptoDados: opcao %i",opcao);
 
-	test_skcipher_encrypt_decrypt(addrDados, addrKey, &sk, nBlocos,opcao);
+	test_skcipher_encrypt_decrypt(stringAux, addrKey, &sk, nBlocos,opcao);
 	/*----------------------------------------------------------------*/
 	/*------------------------Trata-Dados-Cifrados--------------------*/
 
-	pr_info("8-cryptoDados: Resultado Crypto textInCipher %s", textInCipher);
+	pr_info("8-cryptoDados: Resultado Crypto textInCipher %s", stringAux);
 	test_skcipher_finish(&sk);
 	/*----------------------------------------------------------------*/
+	memcpy(*addrDados, stringAux, nBlocos * CIPHER_BLOCK_SIZE);
+	kfree(stringAux);
 	return;
 }
 
 
-int test_skcipher_encrypt_decrypt(char *plaintext, char *password,
-								 struct skcipher_def *sk,
-								 int nBlocos,
-								 int opcao)
+int test_skcipher_encrypt_decrypt(char *plaintext, char *password,struct skcipher_def *sk,int nBlocos,int opcao)
 {
 	int ret = (int)(-EFAULT);
 	int j;
 	unsigned char key[SYMMETRIC_KEY_LENGTH + 1];
+	char *bloco;
 	
 	pr_info("test_skcipher_encrypt_decrypt: opcao %i",opcao);
 
@@ -151,7 +143,6 @@ int test_skcipher_encrypt_decrypt(char *plaintext, char *password,
 
 	memset((void *)key, '\0', SYMMETRIC_KEY_LENGTH);
 
-	//sprintf((char *)key, "%s", password);
 	memcpy((char *)key,password, SYMMETRIC_KEY_LENGTH);
 
 	/* AES 128 with given symmetric key */
@@ -208,9 +199,9 @@ int test_skcipher_encrypt_decrypt(char *plaintext, char *password,
 			return ret;
 
 		
-    	auxInCipher = sg_virt(&(sk->sg));
+    	bloco = sg_virt(&(sk->sg));
 		
-		memcpy(textInCipher+CIPHER_BLOCK_SIZE*j,auxInCipher,CIPHER_BLOCK_SIZE);
+		memcpy(plaintext+CIPHER_BLOCK_SIZE*j,bloco,CIPHER_BLOCK_SIZE);
 		
 	}
 
