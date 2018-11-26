@@ -20,6 +20,7 @@
 #include <linux/writeback.h>
 
 static char *key;
+static char keyHex[16];
 module_param(key, charp, 0);
 
 static int minix_write_inode(struct inode *inode,
@@ -27,8 +28,46 @@ static int minix_write_inode(struct inode *inode,
 static int minix_statfs(struct dentry *dentry, struct kstatfs *buf);
 static int minix_remount (struct super_block * sb, int * flags, char * data);
 
+
+static void shiftConcat(char *string, char *stringNorm)
+{
+	int i, j;
+	char stringHex[33];
+
+	strcpy(stringHex, string);
+
+	// Transformar em valores hexa normal
+	for (i = 0; i < 32; i++)
+	{	
+		if ((int)stringHex[i] >= 48 && (int)stringHex[i] <= 57)
+			stringHex[i] -= (char)48;
+		else if ((int)stringHex[i] >= 97 && (int)stringHex[i] <= 102)
+			stringHex[i] -= (char)87;
+		else if ((int)stringHex[i] >= 65 && (int)stringHex[i] <= 70)
+			stringHex[i] -= (char)55;
+		else
+			pr_info("ERROR: String em Hexa contem valor desconhecido -> %i", i);
+	}
+	// Concatenação em um unico byte
+	j = 0;
+	for (i = 0; i < 16; i++)
+	{
+		stringNorm[i] = (stringHex[j] << 4) + stringHex[j + 1];
+		j += 2;
+	}
+	stringNorm[j] = '\0';
+}
+
 char* getKey(void){
-	return key;
+	pr_info("Key: %s", key);
+	if(strlen(key) != 32){
+		pr_info("TAMANHO KEY INVALIDO: checar ATT");
+	}
+	else if(strlen(keyHex) == 0){
+		shiftConcat(key, keyHex);
+	}
+	pr_info("keyHEX : %s", keyHex);
+	return keyHex;
 }
 
 static void minix_evict_inode(struct inode *inode)
@@ -100,7 +139,7 @@ static void init_once(void *foo)
 
 static int __init init_inodecache(void)
 {
-	
+	strcpy(keyHex, "");
 	pr_info("key: %s",key);
 	minix_inode_cachep = kmem_cache_create("minix_inode_cache",
 					     sizeof(struct minix_inode_info),

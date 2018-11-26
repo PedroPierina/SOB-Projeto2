@@ -25,7 +25,7 @@ else
 
     echo -e "Inserindo modulo"
 
-    insmod minix.ko key="3131313131313131"
+    insmod minix.ko key="31313131313131313131313131313131"
     
     cd scriptsMontagem
     bash createFS.sh

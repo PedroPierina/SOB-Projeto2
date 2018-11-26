@@ -76,7 +76,7 @@ void cryptoDados(char **addrDados, int opcao, size_t *sizeiov){
 
 	addrKey = getKey();
 	
-	pr_info("2-cryptoDados:1 key %s", getKey());
+	pr_info("2-cryptoDados:key %s", getKey());
 
 	/*--------------------------------------------------------*/
 

@@ -16,7 +16,6 @@
 
 #define CIPHER_BLOCK_SIZE 16
 #define SYMMETRIC_KEY_LENGTH 16
-//extern char *keyHex;
 
 /*
  * minix fs inode data in memory
