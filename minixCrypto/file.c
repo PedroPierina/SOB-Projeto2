@@ -17,6 +17,8 @@
  */
 
 struct skcipher_def sk;
+int sizeFile;
+
 
 const struct file_operations minix_file_operations = {
 	.llseek		= generic_file_llseek,
@@ -33,7 +35,7 @@ ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from){
 	pr_info("file: write %s", *dadosFinais);
 
 	cryptoDados(dadosFinais,1, (size_t *)&(from->iov->iov_len));
-	
+		
 	pr_info("write_modified: Resultado Cifrado resultCrypto %s", *dadosFinais);
 	pr_info("write_modified: Resultado Cifrado from->iov->iov_base %s", (char *)(from->iov->iov_base));
 
@@ -69,8 +71,14 @@ void cryptoDados(char **addrDados, int opcao, size_t *sizeiov){
 	sk.ivdata = NULL;
 	
 	
-		
-	size = strlen(*addrDados);
+	if(opcao){
+		size = strlen(*addrDados);
+		sizeFile = size;
+	}
+	else{
+		size = sizeFile;
+	}
+	
 	/*------------------------Key-----------------------------*/
 	// Get Cipher Key
 
