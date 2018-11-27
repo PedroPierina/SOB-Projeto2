@@ -17,13 +17,11 @@
  */
 
 struct skcipher_def sk;
-int sizeFile;
-
 
 const struct file_operations minix_file_operations = {
 	.llseek		= generic_file_llseek,
-	.read_iter	= &read_modified,
-	.write_iter	= &write_modified, 
+	.read_iter	= read_modified,
+	.write_iter	= write_modified, 
 	.mmap		= generic_file_mmap,
 	.fsync		= generic_file_fsync,
 	.splice_read 	= generic_file_splice_read,
@@ -32,32 +30,40 @@ const struct file_operations minix_file_operations = {
 ssize_t write_modified(struct kiocb *iocb, struct iov_iter *from){
 
 	char **dadosFinais = (char **)&(from->iov->iov_base);
+	//struct iovec *aux;
+	size_t *iovlen;
 	pr_info("file: write %s", *dadosFinais);
 
-	cryptoDados(dadosFinais,1, (size_t *)&(from->iov->iov_len));
-		
+	iovlen = (size_t *)&(from->iov->iov_len);
+	cryptoDados(dadosFinais, 1, (size_t *)&(from->count), iovlen);
+
 	pr_info("write_modified: Resultado Cifrado resultCrypto %s", *dadosFinais);
-	pr_info("write_modified: Resultado Cifrado from->iov->iov_base %s", (char *)(from->iov->iov_base));
+	//pr_info("write_modified: Resultado Cifrado from->iov->iov_base %s", (char *)(from->iov->iov_base));
 
 	return generic_file_write_iter(iocb,from);
 }
 
 ssize_t read_modified(struct kiocb *iocb, struct iov_iter *from){
 
-	char **dadosFinais = (char **)&(from->iov->iov_base);
+	char **dadosFinais;
+	size_t *iovlen;
+	//struct iovec *aux;
 	ssize_t ret;
+	ret = generic_file_read_iter(iocb, from);
+	dadosFinais = (char **)&(from->iov->iov_base);
+	iovlen = (size_t *)&(from->iov->iov_len);
 	pr_info("1-file: read %s", *dadosFinais);
 
-	ret = generic_file_read_iter(iocb,from);
-	cryptoDados(dadosFinais,0, (size_t *)&(from->iov->iov_len));
+	//ret = generic_file_read_iter(iocb,from);
+	cryptoDados(dadosFinais,0, (size_t *)&(from->count), iovlen);
 
 	pr_info("9-read_modified: Resultado Decifrado resultCrypto %s", *dadosFinais);
-	pr_info("11-read_modified: Resultado Decifrado from->iov->iov_base %s", (char *)(from->iov->iov_base));
+	//pr_info("11-read_modified: Resultado Decifrado from->iov->iov_base %s", (char *)(from->iov->iov_base));
 	
 	return ret;
 }
 
-void cryptoDados(char **addrDados, int opcao, size_t *sizeiov){
+void cryptoDados(char **addrDados, int opcao, size_t *sizeiov, size_t *iovlen){
 
 	char *addrKey;
 	char *stringAux;
@@ -70,15 +76,7 @@ void cryptoDados(char **addrDados, int opcao, size_t *sizeiov){
 	sk.ciphertext = NULL;
 	sk.ivdata = NULL;
 	
-	
-	if(opcao){
-		size = strlen(*addrDados);
-		sizeFile = size;
-	}
-	else{
-		size = sizeFile;
-	}
-	
+	size = (int)(*sizeiov);
 	/*------------------------Key-----------------------------*/
 	// Get Cipher Key
 
@@ -94,7 +92,6 @@ void cryptoDados(char **addrDados, int opcao, size_t *sizeiov){
 
 	nBlocos = size/CIPHER_BLOCK_SIZE;
 	if(size%CIPHER_BLOCK_SIZE)nBlocos++;
-	*sizeiov = nBlocos * CIPHER_BLOCK_SIZE;
 	stringAux = (char*)vmalloc(nBlocos * CIPHER_BLOCK_SIZE);
 	memset(stringAux, 0, nBlocos * CIPHER_BLOCK_SIZE);
 	memcpy(stringAux, *addrDados, size);
@@ -109,7 +106,10 @@ void cryptoDados(char **addrDados, int opcao, size_t *sizeiov){
 	pr_info("8-cryptoDados: Resultado Crypto textInCipher %s", stringAux);
 	test_skcipher_finish(&sk);
 	/*----------------------------------------------------------------*/
+	*iovlen = nBlocos * CIPHER_BLOCK_SIZE;
+
 	memcpy(*addrDados, stringAux, nBlocos * CIPHER_BLOCK_SIZE);
+
 	vfree(stringAux);
 	return;
 }
